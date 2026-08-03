@@ -413,7 +413,38 @@
   }
   footer .display{font-size:26px; margin-bottom:10px; color:var(--ink);}
 
-  /* ---------- reveal ---------- */
+  /* ---------- PASSWORD GATE ---------- */
+  #gate{
+    position:fixed; inset:0; z-index:1000;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--linen);
+    padding:24px;
+  }
+  #gate .gate-card{
+    max-width:360px; width:100%; text-align:center;
+  }
+  #gate .eyebrow{margin-bottom:16px;}
+  #gate h2{font-size:28px; margin-bottom:10px;}
+  #gate p{color:var(--ink-soft); font-size:14px; margin-bottom:28px;}
+  #gate input{
+    width:100%; font-family:"Work Sans", sans-serif; font-size:15px;
+    padding:12px 14px; border:1px solid var(--line); border-radius:var(--radius);
+    background:#fff; color:var(--ink); text-align:center; letter-spacing:0.05em;
+    margin-bottom:14px;
+  }
+  #gate input:focus{outline:2px solid var(--moss); outline-offset:1px;}
+  #gate button{
+    width:100%; background:var(--ink); color:var(--linen-light); border:none;
+    border-radius:var(--radius); padding:13px 20px; font-family:"Work Sans",sans-serif;
+    font-weight:600; font-size:15px; letter-spacing:0.02em; cursor:pointer;
+  }
+  #gate button:hover{background:var(--moss-dark);}
+  #gate .gate-error{
+    color:#A34B2A; font-size:13px; margin-top:12px; min-height:16px;
+  }
+  body.locked{overflow:hidden;}
+  body.locked #siteContent{display:none;}
+
   .reveal{opacity:0; transform:translateY(18px); transition:opacity 0.7s ease, transform 0.7s ease;}
   .reveal.in{opacity:1; transform:translateY(0);}
   @media (prefers-reduced-motion: reduce){
@@ -422,8 +453,20 @@
   }
 </style>
 </head>
-<body>
+<body class="locked">
 
+<div id="gate">
+  <div class="gate-card">
+    <div class="eyebrow">Save the date</div>
+    <h2>Emil <span class="amp" style="font-style:italic;color:var(--gold);">&amp;</span> Renée</h2>
+    <p>Sidan är låst tills inbjudan skickas ut. Har du fått lösenordet av oss?</p>
+    <input type="password" id="gatePassword" placeholder="Lösenord" autocomplete="off">
+    <button type="button" id="gateSubmit">Lås upp</button>
+    <div class="gate-error" id="gateError"></div>
+  </div>
+</div>
+
+<div id="siteContent">
 <nav class="nav" id="siteNav">
   <a href="#hem" class="brand">E <span class="amp">&amp;</span> R</a>
   <ul>
@@ -717,8 +760,39 @@
   <div class="display">Emil &amp; Renée</div>
   <p>Frågor? Maila oss på <a href="mailto:[fyll i mejladress]">[fyll i mejladress]</a></p>
 </footer>
+</div>
 
 <script>
+  // ---------- Password gate ----------
+  // NOTE for Emil: this is a soft gate, not real security — the password
+  // below is visible to anyone who views the page source. It's meant to keep
+  // casual visitors and search engines out before you send invitations, not
+  // to stop a determined person. Change PASSWORD to whatever you want to
+  // share, and remove this whole block (plus the #gate div and body.locked
+  // class in the CSS) once the site should be fully public.
+  (function(){
+    var PASSWORD = "brollop2027"; // TODO: byt till valfritt lösenord
+    var body = document.body;
+    if (localStorage.getItem("gateUnlocked") === "yes") {
+      body.classList.remove("locked");
+      document.getElementById("gate").style.display = "none";
+    }
+    function tryUnlock(){
+      var val = document.getElementById("gatePassword").value.trim().toLowerCase();
+      if (val === PASSWORD.toLowerCase()) {
+        localStorage.setItem("gateUnlocked", "yes");
+        body.classList.remove("locked");
+        document.getElementById("gate").style.display = "none";
+      } else {
+        document.getElementById("gateError").textContent = "Fel lösenord, försök igen.";
+      }
+    }
+    document.getElementById("gateSubmit").addEventListener("click", tryUnlock);
+    document.getElementById("gatePassword").addEventListener("keydown", function(e){
+      if (e.key === "Enter") tryUnlock();
+    });
+  })();
+
   // ---------- Nav background on scroll ----------
   var navEl = document.getElementById("siteNav");
   function toggleNav(){
